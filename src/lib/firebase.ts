@@ -15,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 // Use the databaseId given in the config
-export const db = getFirestore(app, firebaseConfigJson.firestoreDatabaseId || "ai-studio-276ca21a-93ed-46fd-9e19-f3ba640ca296");
+export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || "ai-studio-novelcraft-276ca21a-93ed-46fd-9e19-f3ba640ca296");
 
 export const googleProvider = new GoogleAuthProvider();
 

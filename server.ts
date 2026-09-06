@@ -34,7 +34,7 @@ Based on the following theme or genre: "${theme}", generate:
 Format your output in clean Markdown.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.8-flash',
         contents: prompt,
       });
 
@@ -67,7 +67,7 @@ Format your output in clean Markdown.`;
       const prompt = `Based on the following web novel concept, provide three unexpected, high-stakes plot twists. Format your output in clean Markdown.\n\nConcept:\n${concept}`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.8-flash',
         contents: prompt,
       });
 
@@ -103,7 +103,7 @@ Format your output in clean Markdown.`;
       ];
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-3.8-flash',
         contents,
         config: {
           systemInstruction: `You are an expert web novel co-writer and creative assistant. You are helping the user refine, brainstorm, and expand upon their novel concept. Be encouraging, creative, and concise in your responses. Use Markdown for formatting. \n\nHere is the core concept you are working with:\n\n${concept}`

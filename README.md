@@ -21,3 +21,4 @@ This application is containerized and deployed via Google Cloud Run. To deploy m
      --source . \
      --set-labels dev-tutorial=cloud-run-ai-challenge \
      --allow-unauthenticated
+   ```
