@@ -44,8 +44,10 @@ Format your output in clean Markdown.`;
       const errStr = error?.toString() || '';
       if (error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand')) {
         res.status(503).json({ error: 'The AI model is currently experiencing high demand. Please try again later.' });
+      } else if (error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate')) {
+        res.status(429).json({ error: 'Rate limit exceeded for the free tier API. Please wait a minute before trying again.' });
       } else {
-        res.status(500).json({ error: 'Failed to generate content' });
+        res.status(500).json({ error: `Failed to generate content: ${errStr}` });
       }
     }
   });
@@ -77,8 +79,10 @@ Format your output in clean Markdown.`;
       const errStr = error?.toString() || '';
       if (error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand')) {
         res.status(503).json({ error: 'The AI model is currently experiencing high demand. Please try again later.' });
+      } else if (error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate')) {
+        res.status(429).json({ error: 'Rate limit exceeded for the free tier API. Please wait a minute before trying again.' });
       } else {
-        res.status(500).json({ error: 'Failed to generate plot twists' });
+        res.status(500).json({ error: `Failed to generate plot twists: ${errStr}` });
       }
     }
   });
@@ -116,8 +120,10 @@ Format your output in clean Markdown.`;
       const errStr = error?.toString() || '';
       if (error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand')) {
         res.status(503).json({ error: 'The AI model is currently experiencing high demand. Please try again later.' });
+      } else if (error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate')) {
+        res.status(429).json({ error: 'Rate limit exceeded for the free tier API. Please wait a minute before trying again.' });
       } else {
-        res.status(500).json({ error: 'Failed to generate chat response' });
+        res.status(500).json({ error: `Failed to generate chat response: ${errStr}` });
       }
     }
   });
