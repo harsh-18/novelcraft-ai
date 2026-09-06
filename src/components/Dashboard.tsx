@@ -51,12 +51,46 @@ export function Dashboard({ user }: { user: User }) {
         body: JSON.stringify({ theme, uid: user.uid })
       });
 
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || 'Failed to generate concept');
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          
+          let errorData = null;
+          try {
+             const text = await response.text();
+             errorData = JSON.parse(text);
+          } catch(e) {}
+          throw new Error(errorData?.error || (response.status === 429 ? 'Rate limit exceeded. Please wait a minute.' : 'Failed to complete request'));
+
+        } else {
+          // If it failed and isn't JSON, it's likely a 504 HTML error from the proxy
+          if (response.status === 504) {
+             throw new Error("The server took too long to respond. Please try again.");
+          }
+          throw new Error(`Server error: ${response.status}`);
+        }
+      }
+      
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned an invalid response (not JSON). Please try again.");
+      }
+      
+      let data;
+      try {
+        const textResponse = await response.text();
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        if (response.status === 429 || response.status === 503 || response.status === 504) {
+          throw new Error("The AI model is experiencing high demand or rate limits. Please try again later.");
+        }
+        throw new Error("Server returned an invalid response. This usually happens during a network proxy timeout.");
       }
 
-      const data = await response.json();
+
+
       setContent(data.content);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -78,12 +112,46 @@ export function Dashboard({ user }: { user: User }) {
         body: JSON.stringify({ concept: content, uid: user.uid })
       });
 
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || 'Failed to generate plot twists');
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          
+          let errorData = null;
+          try {
+             const text = await response.text();
+             errorData = JSON.parse(text);
+          } catch(e) {}
+          throw new Error(errorData?.error || (response.status === 429 ? 'Rate limit exceeded. Please wait a minute.' : 'Failed to complete request'));
+
+        } else {
+          // If it failed and isn't JSON, it's likely a 504 HTML error from the proxy
+          if (response.status === 504) {
+             throw new Error("The server took too long to respond. Please try again.");
+          }
+          throw new Error(`Server error: ${response.status}`);
+        }
+      }
+      
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned an invalid response (not JSON). Please try again.");
+      }
+      
+      let data;
+      try {
+        const textResponse = await response.text();
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        if (response.status === 429 || response.status === 503 || response.status === 504) {
+          throw new Error("The AI model is experiencing high demand or rate limits. Please try again later.");
+        }
+        throw new Error("Server returned an invalid response. This usually happens during a network proxy timeout.");
       }
 
-      const data = await response.json();
+
+
       setTwists(data.content);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred generating twists');
@@ -145,12 +213,46 @@ export function Dashboard({ user }: { user: User }) {
         body: JSON.stringify({ concept: content, history: chatHistory, message: userMessage, uid: user.uid })
       });
       
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || 'Failed to send message');
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          
+          let errorData = null;
+          try {
+             const text = await response.text();
+             errorData = JSON.parse(text);
+          } catch(e) {}
+          throw new Error(errorData?.error || (response.status === 429 ? 'Rate limit exceeded. Please wait a minute.' : 'Failed to complete request'));
+
+        } else {
+          // If it failed and isn't JSON, it's likely a 504 HTML error from the proxy
+          if (response.status === 504) {
+             throw new Error("The server took too long to respond. Please try again.");
+          }
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
       
-      const data = await response.json();
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned an invalid response (not JSON). Please try again.");
+      }
+      
+      let data;
+      try {
+        const textResponse = await response.text();
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        if (response.status === 429 || response.status === 503 || response.status === 504) {
+          throw new Error("The AI model is experiencing high demand or rate limits. Please try again later.");
+        }
+        throw new Error("Server returned an invalid response. This usually happens during a network proxy timeout.");
+      }
+
+
+
       setChatHistory([...newHistory, { role: 'model', parts: [{ text: data.content }] }]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during chat');

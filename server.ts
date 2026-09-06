@@ -3,6 +3,34 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 
+// Helper function to handle exponential backoff for transient API errors (503 / 429)
+async function generateContentWithRetry(ai: GoogleGenAI, params: any, maxRetries = 1) {
+  let retries = 0;
+  while (true) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (error: any) {
+      const errStr = error?.toString() || '';
+      const isTransient = 
+        error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') ||
+        error?.status === 504 || errStr.includes('504') ||
+        error?.status === 502 || errStr.includes('502') ||
+        error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate') ||
+        errStr.includes("Unexpected token '<'") || errStr.includes('is not valid JSON') || errStr.includes('JSON');
+      
+      if (isTransient && retries < maxRetries) {
+        retries++;
+        // Short backoff to prevent Cloud Run 30s timeout
+        const delay = 1000 + Math.random() * 500;
+        console.log(`Gemini API busy (attempt ${retries}/${maxRetries}). Retrying in ${Math.round(delay)}ms...`);
+        await new Promise(res => setTimeout(res, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -33,21 +61,37 @@ Based on the following theme or genre: "${theme}", generate:
 
 Format your output in clean Markdown.`;
 
-      const response = await ai.models.generateContent({
+      const response = await generateContentWithRetry(ai, {
         model: 'gemini-3.8-flash',
         contents: prompt,
       });
 
       res.json({ content: response.text });
     } catch (error: any) {
-      console.error('Error generating content:', error);
       const errStr = error?.toString() || '';
+      const isTransient = 
+        error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') ||
+        error?.status === 504 || errStr.includes('504') ||
+        error?.status === 502 || errStr.includes('502') ||
+        error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate') ||
+        errStr.includes("Unexpected token '<'") || errStr.includes('is not valid JSON') || errStr.includes('JSON');
+      
+      if (!isTransient) {
+        console.error('Error generating content:', error);
+      }
+      
       if (error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand')) {
         res.status(503).json({ error: 'The AI model is currently experiencing high demand. Please try again later.' });
       } else if (error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate')) {
         res.status(429).json({ error: 'Rate limit exceeded for the free tier API. Please wait a minute before trying again.' });
       } else {
-        res.status(500).json({ error: `Failed to generate content: ${errStr}` });
+        
+        if (errStr.includes("Unexpected token '<'") || errStr.includes("is not valid JSON") || errStr.includes("504") || errStr.includes("502")) {
+          res.status(503).json({ error: 'The AI model is temporarily unavailable due to a network gateway error. Please try again later.' });
+        } else {
+          res.status(500).json({ error: `Failed to generate content: ${errStr}` });
+        }
+
       }
     }
   });
@@ -68,21 +112,37 @@ Format your output in clean Markdown.`;
 
       const prompt = `Based on the following web novel concept, provide three unexpected, high-stakes plot twists. Format your output in clean Markdown.\n\nConcept:\n${concept}`;
 
-      const response = await ai.models.generateContent({
+      const response = await generateContentWithRetry(ai, {
         model: 'gemini-3.8-flash',
         contents: prompt,
       });
 
       res.json({ content: response.text });
     } catch (error: any) {
-      console.error('Error generating plot twists:', error);
       const errStr = error?.toString() || '';
+      const isTransient = 
+        error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') ||
+        error?.status === 504 || errStr.includes('504') ||
+        error?.status === 502 || errStr.includes('502') ||
+        error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate') ||
+        errStr.includes("Unexpected token '<'") || errStr.includes('is not valid JSON') || errStr.includes('JSON');
+      
+      if (!isTransient) {
+        console.error('Error generating plot twists:', error);
+      }
+
       if (error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand')) {
         res.status(503).json({ error: 'The AI model is currently experiencing high demand. Please try again later.' });
       } else if (error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate')) {
         res.status(429).json({ error: 'Rate limit exceeded for the free tier API. Please wait a minute before trying again.' });
       } else {
-        res.status(500).json({ error: `Failed to generate plot twists: ${errStr}` });
+        
+        if (errStr.includes("Unexpected token '<'") || errStr.includes("is not valid JSON") || errStr.includes("504") || errStr.includes("502")) {
+          res.status(503).json({ error: 'The AI model is temporarily unavailable due to a network gateway error. Please try again later.' });
+        } else {
+          res.status(500).json({ error: `Failed to generate plot twists: ${errStr}` });
+        }
+
       }
     }
   });
@@ -106,7 +166,7 @@ Format your output in clean Markdown.`;
         { role: 'user', parts: [{ text: message }] }
       ];
 
-      const response = await ai.models.generateContent({
+      const response = await generateContentWithRetry(ai, {
         model: 'gemini-3.8-flash',
         contents,
         config: {
@@ -116,14 +176,30 @@ Format your output in clean Markdown.`;
 
       res.json({ content: response.text });
     } catch (error: any) {
-      console.error('Error generating chat response:', error);
       const errStr = error?.toString() || '';
+      const isTransient = 
+        error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand') ||
+        error?.status === 504 || errStr.includes('504') ||
+        error?.status === 502 || errStr.includes('502') ||
+        error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate') ||
+        errStr.includes("Unexpected token '<'") || errStr.includes('is not valid JSON') || errStr.includes('JSON');
+      
+      if (!isTransient) {
+        console.error('Error generating chat response:', error);
+      }
+
       if (error?.status === 503 || errStr.includes('503') || errStr.includes('UNAVAILABLE') || errStr.includes('high demand')) {
         res.status(503).json({ error: 'The AI model is currently experiencing high demand. Please try again later.' });
       } else if (error?.status === 429 || errStr.includes('429') || errStr.toLowerCase().includes('quota') || errStr.toLowerCase().includes('rate')) {
         res.status(429).json({ error: 'Rate limit exceeded for the free tier API. Please wait a minute before trying again.' });
       } else {
-        res.status(500).json({ error: `Failed to generate chat response: ${errStr}` });
+        
+        if (errStr.includes("Unexpected token '<'") || errStr.includes("is not valid JSON") || errStr.includes("504") || errStr.includes("502")) {
+          res.status(503).json({ error: 'The AI model is temporarily unavailable due to a network gateway error. Please try again later.' });
+        } else {
+          res.status(500).json({ error: `Failed to generate chat response: ${errStr}` });
+        }
+
       }
     }
   });

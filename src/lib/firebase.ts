@@ -2,20 +2,19 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, Timestamp } from "firebase/firestore";
-import firebaseConfigJson from "../../firebase-applet-config.json";
 
 const firebaseConfig = {
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfigJson.appId,
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfigJson.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 // Use the databaseId given in the config
-export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || "ai-studio-novelcraft-276ca21a-93ed-46fd-9e19-f3ba640ca296");
+export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-novelcraft-276ca21a-93ed-46fd-9e19-f3ba640ca296");
 
 export const googleProvider = new GoogleAuthProvider();
 
